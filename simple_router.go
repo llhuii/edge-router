@@ -137,7 +137,7 @@ func registerDis() (*ServiceElem, error) {
 	INFO.Printf("these environment variables are supported\n")
 	INFO.Printf("\tDIS_STREAM_NAME => default stream name\n")
 	INFO.Printf("\tDIS_TOPICS => mqtt source topic to be upload to dis\n")
-	INFO.Printf("\t\teach line format: topic [stream_name] [partition_key]\n")
+	INFO.Printf("\t\tformat: [topic [stream_name] [partition_key];]+\n")
 
 	service := "dis"
 	disUploadTopic := getenv("DIS_UPLOAD_TOPIC", defaultDisUploadTopic)
@@ -146,7 +146,7 @@ func registerDis() (*ServiceElem, error) {
 	// topic => service request property map
 	sp := make(TopicServicePropertyMap)
 	ngood := 0
-	for _, f := range strings.Split(getenv("DIS_TOPICS", ""), "\n") {
+	for _, f := range strings.Split(getenv("DIS_TOPICS", ""), ";") {
 		fields := strings.SplitN(strings.TrimSpace(f), " ", 3)
 		topic := f
 		streamName := defaultStreamName
