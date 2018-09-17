@@ -215,24 +215,24 @@ func main() {
 	opts.SetClientID(fmt.Sprintf("simple-dis-forward-%d", rand.Intn(1000)))
 	opts.SetAutoReconnect(true)
 
+	opts.OnConnect = func(c MQTT.Client) {
+		o := c.OptionsReader()
+		INFO.Printf("server %+q is connected\n", o.Servers())
+		for topic := range userTopicMap {
+
+			if token := c.Subscribe(topic, 0, userCallback); token.Wait() && token.Error() != nil {
+				ERROR.Printf("error on subscribe topic %s:%+q\n", topic, token.Error())
+				continue
+			}
+			INFO.Printf("subscribe topic %s successfully", topic)
+		}
+	}
+
 	c := MQTT.NewClient(opts)
 	if token := c.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
 	defer c.Disconnect(250)
-
-	for topic := range userTopicMap {
-
-		if token := c.Subscribe(topic, 0, userCallback); token.Wait() && token.Error() != nil {
-			panic(token.Error())
-		}
-		defer func(topic string) {
-			if token := c.Unsubscribe(topic); token.Wait() && token.Error() != nil {
-				fmt.Println(token.Error())
-				os.Exit(1)
-			}
-		}(topic)
-	}
 
 	for {
 		time.Sleep(15 * time.Second)
